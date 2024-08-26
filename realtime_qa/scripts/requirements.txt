@@ -1,0 +1,9 @@
+requests
+numpy==1.26
+newspaper3k
+transformers
+openai>=1.0.0
+torch
+jsonlines
+lxml[html_clean]
+datasets

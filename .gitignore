@@ -1,0 +1,5 @@
+*.pyc
+*/keys.json
+*/cache
+realtime_qa/scripts/generation/keys.json
+realtime_qa/scripts/.gitignore
