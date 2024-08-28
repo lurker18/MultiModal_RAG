@@ -1,5 +1,12 @@
 import os
 from utils.tools import read_jsonl, answer2jsonl, check_jsonls, fall_back
+import transformers
+
+os.environ["TRANSFORMERS_CACHE"] = '/home/utopiamath/.cache' # transformer cache path
+os.environ['HF_HOME'] = '/home/utopiamath/.cache/huggingface' # huggingface download path
+os.environ['HF_DATASET_CACHE'] = '/home/utopiamath/Downloads' # cache path
+
+transformers.utils.move_cache(os.environ["TRANSFORMERS_CACHE"] ) # cache_path -> 
 
 def main(in_file, config="closed_gpt3", out_dir="../baseline_results/", gcs_file=None, generate=False, rm_date_q=False, rm_date_r=False):
     questions = read_jsonl(in_file)
@@ -34,6 +41,7 @@ def main(in_file, config="closed_gpt3", out_dir="../baseline_results/", gcs_file
         answers, scores = run_gpt3(questions, retrieved_data=retrieved_data, generate=generate, rm_date_q=rm_date_q, rm_date_r=rm_date_r)
 
     elif config == "open_rag_gcs":
+        print("OPEN_RAG_GCS", os.environ["TRANSFORMERS_CACHE"])
         from generation.rag import run_rag
         if gcs_file is None:
             gcs_file = in_file.replace("_qa.jsonl", "_gcs.jsonl").replace("_qa_nota.jsonl", "_gcs.jsonl")

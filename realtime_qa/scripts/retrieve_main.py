@@ -1,10 +1,9 @@
 import jsonlines
 
 import os
-os.environ["TRANSFORMERS_CACHE"] = '/home/utopiamath/.cache'
-# 다운로드 경로 변경
-os.environ['HF_HOME'] = '/home/utopiamath/.cache/huggingface'
-os.environ['HF_DATASET_CACHE'] = '/home/utopiamath/Downloads'
+os.environ["TRANSFORMERS_CACHE"] = '/home/utopiamath/.cache' # transformer cache path
+os.environ['HF_HOME'] = '/home/utopiamath/.cache/huggingface' # huggingface download path
+os.environ['HF_DATASET_CACHE'] = '/home/utopiamath/Downloads' # cache path
 
 from datasets import DownloadConfig
 

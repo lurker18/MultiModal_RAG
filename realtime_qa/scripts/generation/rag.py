@@ -1,16 +1,17 @@
 import utils.hf_env
 import torch, datetime
-from transformers import RagSequenceForGeneration, RagTokenizer
+from transformers import RagSequenceForGeneration, RagTokenizer, RagConfig
 from utils.tools import add_today
 import os
 
-os.environ["TRANSFORMERS_CACHE"] = ".cache"  # 현재 디렉토리의 cache 폴더를 사용하도록 설정
+# os.environ["TRANSFORMERS_CACHE"] = '/home/utopiamath/.cache/huggingface/hub' # 경로 변경
 
 # 모델 로드
 model_name = "facebook/rag-sequence-nq"
-model = RagSequenceForGeneration.from_pretrained(model_name, cache_dir="./cache")
-tokenizer = RagTokenizer.from_pretrained(model_name, cache_dir="./cache")
-
+# print("TF", os.environ["TRANSFORMERS_CACHE"])
+# model = RagSequenceForGeneration.from_pretrained(model_name, cache_dir='/home/utopiamath/.cache/')
+# config = RagConfig.from_pretrained(model_name, cache_dir='/home/utopiamath/.cache/')
+# tokenizer = RagTokenizer.from_pretrained(model_name, cache_dir='/home/utopiamath/.cache/')
 
 def run_rag(questions, retrieved_data, generate=False, top_k=5, model='facebook/rag-sequence-nq', as_of=False):
     model, tokenizer = load_model(model)
@@ -25,6 +26,59 @@ def run_rag(questions, retrieved_data, generate=False, top_k=5, model='facebook/
             answers.append(answer)
     return answers
 
+def rag_question(question, retrieved_docs, model, tokenizer, top_k=5, as_of=False):
+    sentence = question["question_sentence"]
+    
+    # lowercase by default
+    if as_of:
+        sentence = add_today(sentence, question["question_date"])
+    sentence = sentence.lower()
+    choices = question["choices"]
+    inputs = []
+    targets = []
+    
+    for choice in choices:
+        inputs.append(sentence)
+        # I don't quite understand why you need this, but otherwise the model fails
+        targets.append('</s> ' + choice.lower())
+    
+    # Tokenize the inputs
+    inputs = tokenizer(inputs, padding=True, return_tensors="pt")
+    input_ids = inputs["input_ids"].to(model.device)
+
+    # Tokenize the targets (as the target tokenizer)
+    targets = tokenizer(targets, padding=True, return_tensors="pt")
+    
+    # Bug in HF. The output should start with 2 (eos) rather than 0 (bos).
+    # But very small prob differences anyways.
+    for key, val in targets.items():
+        targets[key] = val[:, 1:]
+    
+    labels = targets["input_ids"].to(model.device)
+    # -1 to remove bos
+    out_sizes = targets["attention_mask"].to(model.device).eq(1).sum(dim=-1) - 1
+
+    # Retrieve documents and convert to input ids
+    retrieved_text, doc_scores = get_retrieval_text(retrieved_docs, sentence, top_k=top_k)
+    context_input_ids, context_attention_mask, doc_scores = retrieved2ids(retrieved_text, tokenizer, doc_scores, len(choices))
+    context_input_ids = clip_max(context_input_ids, max_len=1024)
+    context_attention_mask = clip_max(context_attention_mask, max_len=1024)
+
+    # Compute the loss for each choice
+    losses = model(
+        context_input_ids=context_input_ids.to(model.device),
+        context_attention_mask=context_attention_mask.to(model.device),
+        doc_scores=doc_scores.to(model.device),
+        decoder_input_ids=labels,
+        labels=labels,
+    )["loss"]
+    
+    losses = losses / out_sizes
+    answer = int(losses.argmin())
+    
+    return [str(answer)]
+
+"""
 def rag_question(question, retrieved_docs, model, tokenizer, top_k=5, as_of=False):
     sentence = question["question_sentence"]
     # lowercase by default
@@ -66,6 +120,7 @@ def rag_question(question, retrieved_docs, model, tokenizer, top_k=5, as_of=Fals
     losses = losses/out_sizes
     answer = int(losses.argmin())
     return [str(answer)]
+"""
 
 def rag_question_gen(question, retrieved_docs, model, tokenizer, top_k=5, as_of=False):
     sentence = question["question_sentence"]
@@ -89,9 +144,10 @@ def rag_question_gen(question, retrieved_docs, model, tokenizer, top_k=5, as_of=
     answer = tokenizer.batch_decode(generated, skip_special_tokens=True)[0].strip()
     return answer
 
+    
 def load_model(model_name):
-    model = RagSequenceForGeneration.from_pretrained(model_name)
-    tokenizer = RagTokenizer.from_pretrained(model_name)
+    model = RagSequenceForGeneration.from_pretrained(model_name, cache_dir='/home/utopiamath/.cache/')
+    tokenizer = RagTokenizer.from_pretrained(model_name, cache_dir='/home/utopiamath/.cache/')
     if torch.cuda.is_available():
         model = model.cuda()
     return model, tokenizer
@@ -126,6 +182,21 @@ def get_retrieval_text(retrieved_docs, sentence, top_k=5):
 
 def retrieved2ids(retrieved_text, tokenizer, doc_scores, bsz):
     # duplicate for different output candidates
+    retrieved_text = retrieved_text * bsz
+    doc_scores = doc_scores.reshape(1, -1).repeat([bsz, 1])
+    
+    # Tokenize the retrieved text
+    targets = tokenizer(retrieved_text, padding=True, return_tensors="pt")
+    
+    for key, val in targets.items():
+        # tokenizer adds bos (0) by default. No need to do this.
+        targets[key] = val[:, 1:]
+    
+    return targets["input_ids"], targets["attention_mask"], doc_scores
+
+"""
+def retrieved2ids(retrieved_text, tokenizer, doc_scores, bsz):
+    # duplicate for different output candidates
     retrieved_text = retrieved_text*bsz
     doc_scores = doc_scores.reshape(1, -1).repeat([bsz, 1])
     with tokenizer.as_target_tokenizer():
@@ -134,3 +205,4 @@ def retrieved2ids(retrieved_text, tokenizer, doc_scores, bsz):
         # tokenizer adds bos (0) by default. No need to do this.
         targets[key] = val[:, 1:]
     return targets["input_ids"], targets["attention_mask"], doc_scores
+"""

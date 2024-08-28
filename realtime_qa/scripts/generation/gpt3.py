@@ -10,7 +10,7 @@ from transformers import GPT2TokenizerFast
 
 client = OpenAI(api_key=api_key)
 
-def run_gpt3(questions, retrieved_data=None, generate=False, model="text-davinci-002", rm_date_q=False, rm_date_r=False):
+def run_gpt3(questions, retrieved_data=None, generate=False, model='gpt-3.5-turbo-instruct', rm_date_q=False, rm_date_r=False):
     answers = []
     scores = []
     tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
@@ -33,7 +33,7 @@ def run_gpt3(questions, retrieved_data=None, generate=False, model="text-davinci
         scores.append(score)
     return answers, scores
 
-def gpt3_question(question, retrieved_text=None, model="text-davinci-002", rm_date_q=False, tokenizer=None):
+def gpt3_question(question, retrieved_text=None, model='gpt-3.5-turbo-instruct', rm_date_q=False, tokenizer=None):
     sentence = question["question_sentence"]
     if not rm_date_q:
         sentence = add_today(sentence, question["question_date"])
@@ -74,7 +74,7 @@ def gpt3_question(question, retrieved_text=None, model="text-davinci-002", rm_da
     prob = probs[answer]
     return [str(answer)], str(prob)
 
-def gpt3_question_gen(question, retrieved_text=None, model="text-davinci-002", rm_date_q=False, tokenizer=None):
+def gpt3_question_gen(question, retrieved_text=None, model='gpt-3.5-turbo-instruct', rm_date_q=False, tokenizer=None):
     sentence = question["question_sentence"]
     demo = "What is the capital city of Japan?"
     #demo = "Who is the President of the U.S.?"
