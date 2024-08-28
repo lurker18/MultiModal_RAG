@@ -1,0 +1,4 @@
+설치해야 할 패키지 목록
+requirements.txt에 패키지 목록
+https://github.com/facebookresearch/faiss/blob/main/INSTALL.md 참조
+-  conda install -c pytorch/label/nightly -c nvidia faiss-gpu=1.8.0
