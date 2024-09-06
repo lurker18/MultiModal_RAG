@@ -3,7 +3,7 @@ from collections import Counter
         
 def read_jsonl(in_file):
     questions = []
-    with open(in_file, encoding='utf8') as fin:
+    with open(in_file, encoding = 'utf8') as fin:
         for line in fin:
             question = json.loads(line)
             questions.append(question)
@@ -19,7 +19,7 @@ def fall_back(data_1, data_2, top_k=5):
             datum_1["search_result"].extend(datum_2["search_result"][:top_k-nb_retrieved])
     return data_1
 
-def answer2jsonl(answers, questions, out_file, scores=None):
+def answer2jsonl(answers, questions, out_file, scores = None):
     # Confirm we have answers for all questions
     assert len(answers) == len(questions)
     if scores is not None:
@@ -27,9 +27,9 @@ def answer2jsonl(answers, questions, out_file, scores=None):
     outputs = []
     for q_idx in range(len(answers)):
         if scores is None:
-            output = {"question_id": questions[q_idx]["question_id"], "prediction": answers[q_idx]}
+            output = {"question_id": questions[q_idx]["question_id"], "prediction" : answers[q_idx]}
         else:
-            output = {"question_id": questions[q_idx]["question_id"], "prediction": answers[q_idx], "score": scores[q_idx]}
+            output = {"question_id": questions[q_idx]["question_id"], "prediction" : answers[q_idx], "score" : scores[q_idx]}
         outputs.append(output)
     with jsonlines.open(out_file, mode='w') as fout:
         fout.write_all(outputs)
@@ -40,8 +40,8 @@ def wiki2jsonl(questions, retrieved_docs, out_file):
     for question, retrieved in zip(questions, retrieved_docs):
         search_result = []
         for doc_id, doc, doc_scores, publish_date in zip(retrieved["doc_ids"], retrieved["docs"], retrieved["doc_scores"], retrieved["publish_dates"]):
-            search_result.append({"doc_id": doc_id, "text": doc, "doc_scores": doc_scores, "publish_date": publish_date})
-        output = {"question_id": question["question_id"], "search_result": search_result}
+            search_result.append({"doc_id" : doc_id, "text" : doc, "doc_scores": doc_scores, "publish_date" : publish_date})
+        output = {"question_id" : question["question_id"], "search_result" : search_result}
         outputs.append(output)
     with jsonlines.open(out_file, mode='w') as fout:
         fout.write_all(outputs)

@@ -1,39 +1,44 @@
+
+import os
+from dotenv import load_dotenv
 from openai import OpenAI
 import json
-with open("/home/utopiamath/work/realtimeqa_public/scripts/generation/keys.json", "r") as X:
-    obj = json.load(X)
-    api_key = obj["openai_key"]
 import string, datetime
 import numpy as np
-from utils.tools import check_jsonls, add_today
-from transformers import GPT2TokenizerFast
+from utils.tools import add_today
+#from transformers import GPT2TokenizerFast # 요한님 코드
+import tiktoken
 
-client = OpenAI(api_key=api_key)
+load_dotenv()
+api_key = os.getenv('OPENAI_API_KEY')
+client = OpenAI(api_key = api_key)
 
-def run_gpt3(questions, retrieved_data=None, generate=False, model='gpt-3.5-turbo-instruct', rm_date_q=False, rm_date_r=False):
+def run_gpt3(questions, retrieved_data = None, generate = False, model = 'gpt-3.5-turbo-instruct', rm_date_q = False, rm_date_r = False):
     answers = []
     scores = []
-    tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
-    #model = 'text-ada-001'
-    #model = 'text-babbage-001'
-    #model = 'text-curie-001'
-    # model = 'text-davinci-002'
+    tokenizer = tiktoken.get_encoding("cl100k_base") # Default: cl100k_base == GPT-3.5
+    #"gpt-4o"       : "o200k_base"   # e.g., gpt-4o
+    #"gpt-4"        : "cl100k_base"  # e.g., gpt-4
+    #"gpt-3.5-turbo": "cl100k_base"  # e.g., gpt-3.5-turbo
+    #tokenizer = GPT2TokenizerFast.from_pretrained("gpt2") # 요한님 코드
+    
     model = 'gpt-3.5-turbo-instruct'
     for q_idx in range(len(questions)):
         question = questions[q_idx]
         if retrieved_data is not None:
-            retrieved_text = get_retrieved_text(retrieved_data[q_idx], top_k=5, rm_date_r=rm_date_r)
+            retrieved_text = get_retrieved_text(retrieved_data[q_idx], top_k = 5, rm_date_r = rm_date_r)
         else:
             retrieved_text = None
         if generate:
-            answer, score = gpt3_question_gen(question, retrieved_text, model=model, rm_date_q=rm_date_q, tokenizer=tokenizer)
+            answer, score = gpt3_question_gen(question, retrieved_text, model = model, rm_date_q = rm_date_q, tokenizer = tokenizer)
         else:
-            answer, score = gpt3_question(question, retrieved_text, model=model, rm_date_q=rm_date_q, tokenizer=tokenizer)
+            answer, score = gpt3_question(question, retrieved_text, model = model, rm_date_q = rm_date_q, tokenizer = tokenizer)
         answers.append(answer)
         scores.append(score)
     return answers, scores
 
-def gpt3_question(question, retrieved_text=None, model='gpt-3.5-turbo-instruct', rm_date_q=False, tokenizer=None):
+def gpt3_question(question, retrieved_text = None, model = 'gpt-3.5-turbo-instruct', rm_date_q = False, tokenizer = None):
+
     sentence = question["question_sentence"]
     if not rm_date_q:
         sentence = add_today(sentence, question["question_date"])
@@ -49,14 +54,16 @@ def gpt3_question(question, retrieved_text=None, model='gpt-3.5-turbo-instruct',
     scores = []
     for alphabet, choice in zip(string.ascii_uppercase, choices):
         ans = "Answer: {}) {}".format(alphabet, choice)
-        ans_len = len(tokenizer(ans)['input_ids']) - 1
+
+        #ans_len = len(tokenizer(ans)['input_ids']) - 1 # 요한님 코드
+        ans_len = len(tokenizer.encode(ans)) - 1
         query = prompt + "\n" + ans
         output = client.completions.create(
-                                model=model,
-                                prompt=query,
+                                model = model,
+                                prompt = query,
                                 max_tokens = 1,
                                 logprobs = 5,
-                                # echo= True,
+                                # echo = True,
                                 temperature = 0.05,
                                 )
         # print(query, output.choices[0])
@@ -74,7 +81,8 @@ def gpt3_question(question, retrieved_text=None, model='gpt-3.5-turbo-instruct',
     prob = probs[answer]
     return [str(answer)], str(prob)
 
-def gpt3_question_gen(question, retrieved_text=None, model='gpt-3.5-turbo-instruct', rm_date_q=False, tokenizer=None):
+def gpt3_question_gen(question, retrieved_text = None, model = 'gpt-3.5-turbo-instruct', rm_date_q = False, tokenizer = None):
+
     sentence = question["question_sentence"]
     demo = "What is the capital city of Japan?"
     #demo = "Who is the President of the U.S.?"
@@ -90,10 +98,11 @@ def gpt3_question_gen(question, retrieved_text=None, model='gpt-3.5-turbo-instru
         prompt = retrieved_text + "\n" + prompt
     query = prompt + "\nAnswer:"
     output = client.completions.create(
-                            model=model,
-                            prompt=query,
+
+                            model = model,
+                            prompt = query,
                             logprobs = 5,
-                            #echo= True,
+                            #echo = True,
                             temperature = 0.05,
                             )
     # answer = output["choices"][0]["text"].strip()
@@ -103,7 +112,8 @@ def gpt3_question_gen(question, retrieved_text=None, model='gpt-3.5-turbo-instru
     score = np.exp(scores.mean())
     return answer, str(score)
 
-def get_retrieved_text(retrieved_datum, top_k=5, rm_date_r=False):
+
+def get_retrieved_text(retrieved_datum, top_k = 5, rm_date_r = False):
     search_result = retrieved_datum["search_result"]
     retrieved_text = ""
     for article in search_result[:top_k]:

@@ -9,3 +9,5 @@ spacy
 pymupdf
 frontend
 tools
+tiktoken
+python-dotenv
