@@ -9,10 +9,10 @@ from utils.tools import add_today
 #model_folder = '/mnt/nvme01/huggingface/models/'               # ANDLab연구실 서버 경로 설정
 
 def run_closed_t5(questions, generate = False, as_of = False):
-    model_folder = '/media/lurker18/HardDrive/HuggingFace/models/' # 일반 로컬 경로 설정
+    model_folder = '/home/yohan/.cache/huggingface/hub/' # 일반 로컬 경로 설정
     #model_folder = '/mnt/nvme01/huggingface/models/'               # ANDLab연구실 서버 경로 설정
     #model, tokenizer = load_model('google/t5-xxl-ssm-nq')
-    model, tokenizer = load_model(model_folder + 'Google/T5/t5-v1_1-base')
+    model, tokenizer = load_model(model_folder + 'models--facebook--rag-sequence-nq/snapshots/c0d9c6ceda8a69c78091abb7aa734a97b75b89fd')
     answers = []
     for question in questions:
         with torch.no_grad():

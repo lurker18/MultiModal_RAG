@@ -3,6 +3,7 @@ import utils.hf_env
 import torch, datetime
 from transformers import RagRetriever, RagSequenceForGeneration, RagTokenizer
 from utils.tools import read_jsonl, add_today
+from datasets import load_dataset
 
 
 def run_dpr(in_file, out_file, model = 'facebook/rag-sequence-nq', as_of=False):
@@ -44,13 +45,25 @@ def run_dpr_question(question, retriever, model, tokenizer, as_of = False):
     return search_result
 
 def load_model(model_name):
-    model_folder = '/media/lurker18/HardDrive/HuggingFace/models/' # 일반 로컬 경로 설정
+    model_folder = '/home/yohan/.cache/huggingface/hub/' # 일반 로컬 경로 설정
     #model_folder = '/mnt/nvme01/huggingface/models/'               # ANDLab연구실 서버 경로 설정
 
     if model_name == "facebook/rag-sequence-nq":
-        model_name = model_folder + "Facebook/rag-sequence-nq"
+       model_name = model_folder + 'models--facebook--rag-sequence-nq/snapshots/c0d9c6ceda8a69c78091abb7aa734a97b75b89fd'
 
-    retriever = RagRetriever.from_pretrained(model_name, dataset = 'wiki_dpr', index_name = 'compressed')
+    import os 
+    # print(os.environ.get("TRANSFORMERS_CACHE"))
+    # print(os.environ.get("HF_HOME"))
+    # print(os.environ.get("HF_DATASET_CACHE"))
+    os.environ["TRANSFORMERS_CACHE"] = '/home/yohan/.cache'
+    # 다운로드 경로 변경
+    os.environ['HF_HOME'] = '/home/yohan/.cache/huggingface'
+    os.environ['HF_DATASET_CACHE'] = '/home/yohan/Downloads'
+    print(os.environ.get("TRANSFORMERS_CACHE"))
+    print(os.environ.get("HF_HOME"))
+    print(os.environ.get("HF_DATASET_CACHE"))
+    dataset = load_dataset('wiki_dpr', 'psgs_w100.nq.compressed')
+    retriever = RagRetriever.from_pretrained(model_name, dataset=dataset, passages=dataset['train']['text'])
 
     model = RagSequenceForGeneration.from_pretrained(model_name)
     if torch.cuda.is_available():

@@ -1,13 +1,13 @@
 import jsonlines
 
 import os
-os.environ["TRANSFORMERS_CACHE"] = '/home/utopiamath/.cache' # transformer cache path
-os.environ['HF_HOME'] = '/home/utopiamath/.cache/huggingface' # huggingface download path
-os.environ['HF_DATASET_CACHE'] = '/home/utopiamath/Downloads' # cache path
+os.environ["TRANSFORMERS_CACHE"] = '/home/yohan/.cache' # transformer cache path
+os.environ['HF_HOME'] = '/home/yohan/.cache/huggingface' # huggingface download path
+os.environ['HF_DATASET_CACHE'] = '/home/yohan/Downloads' # cache path
 
 from datasets import DownloadConfig
 
-download_config = DownloadConfig(cache_dir='/home/utopiamath/Downloads')
+download_config = DownloadConfig(cache_dir='/home/yohan/Downloads')
 
 def main(key, config, engine, in_file):
     assert in_file.split('_')[-1] == 'qa.jsonl'

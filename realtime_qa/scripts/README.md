@@ -43,3 +43,5 @@ os.environ['HF_DATASET_CACHE'] = '/home/utopiamath/Downloads' # cache path
 ```
 * set transformer cache, huggingface home and huggingface dataset cache (should be accessible)
 
+## Warning ##
+If you want to use `open_gpt3_gcs` option, you shoud adjust 

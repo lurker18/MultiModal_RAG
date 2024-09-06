@@ -3,3 +3,9 @@
 */cache
 realtime_qa/scripts/generation/keys.json
 realtime_qa/scripts/.gitignore
+realtime_qa/scripts/.ipynb_checkpoints/GPT3_op-checkpoint.ipynb
+realtime_qa/baseline_results/20220613_qa_closed_gpt3.jsonl
+realtime_qa/baseline_results/20220613_qa_open_gpt3_gcs.jsonl
+realtime_qa/baseline_results/20220617_qa_open_rag_dpr.jsonl
+realtime_qa/scripts/utils/__pycache__/tools.cpython-311.pyc
+.env

@@ -53,11 +53,16 @@ def gpt3_question(question, retrieved_text = None, model = 'gpt-3.5-turbo-instru
 
     scores = []
     for alphabet, choice in zip(string.ascii_uppercase, choices):
-        ans = "Answer: {}) {}".format(alphabet, choice)
+        if "None of" in choice:
+            ans = "No answer is in ({})".format(",".join(choices[:-1]))
+        else:
+            ans = "Assumed answer: {}) {}".format(alphabet, choice)
 
         #ans_len = len(tokenizer(ans)['input_ids']) - 1 # 요한님 코드
         ans_len = len(tokenizer.encode(ans)) - 1
         query = prompt + "\n" + ans
+        if "None of" not in choice:
+            query = query + "\n" + "Is assumed answer is right?"
         output = client.completions.create(
                                 model = model,
                                 prompt = query,

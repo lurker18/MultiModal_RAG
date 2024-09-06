@@ -3,17 +3,12 @@ import torch
 from transformers import RagSequenceForGeneration, RagTokenizer
 from utils.tools import add_today
 
-# os.environ["TRANSFORMERS_CACHE"] = '/home/utopiamath/.cache/huggingface/hub' # 경로 변경
-model_folder = '/media/lurker18/HardDrive/HuggingFace/models/' # 일반 로컬 경로 설정
+model_folder = '/home/yohan/.cache/huggingface/hub/' # 일반 로컬 경로 설정
 #model_folder = '/mnt/nvme01/huggingface/models/'               # ANDLab연구실 서버 경로 설정
 
 # 모델 로드
-model_name = model_folder + "Facebook/rag-sequence-nq"
-
-# print("TF", os.environ["TRANSFORMERS_CACHE"])
-# model = RagSequenceForGeneration.from_pretrained(model_name, cache_dir='/home/utopiamath/.cache/')
-# config = RagConfig.from_pretrained(model_name, cache_dir='/home/utopiamath/.cache/')
-# tokenizer = RagTokenizer.from_pretrained(model_name, cache_dir='/home/utopiamath/.cache/')
+# model_name = model_folder + "Facebook/rag-sequence-nq"
+model_name = "facebook/rag-sequence-nq"
 
 def run_rag(questions, retrieved_data, generate = False, top_k = 5, model = 'facebook/rag-sequence-nq', as_of = False):
 
