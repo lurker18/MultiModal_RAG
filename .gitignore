@@ -9,3 +9,4 @@ realtime_qa/baseline_results/20220613_qa_open_gpt3_gcs.jsonl
 realtime_qa/baseline_results/20220617_qa_open_rag_dpr.jsonl
 realtime_qa/scripts/utils/__pycache__/tools.cpython-311.pyc
 .env
+.ipynb_checkpoints
