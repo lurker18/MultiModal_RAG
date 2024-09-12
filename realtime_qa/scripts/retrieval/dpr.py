@@ -63,7 +63,10 @@ def load_model(model_name):
     print(os.environ.get("HF_HOME"))
     print(os.environ.get("HF_DATASET_CACHE"))
     dataset = load_dataset('wiki_dpr', 'psgs_w100.nq.compressed')
-    retriever = RagRetriever.from_pretrained(model_name, dataset=dataset, passages=dataset['train']['text'])
+    passages = dataset['train']['text']
+    # print(dataset, passages)
+    # passages_list = passages.to_list()
+    retriever = RagRetriever.from_pretrained(model_name, passages=passages)
 
     model = RagSequenceForGeneration.from_pretrained(model_name)
     if torch.cuda.is_available():

@@ -67,6 +67,7 @@ def rag_question(question, retrieved_docs, model, tokenizer, top_k = 5, as_of = 
     context_attention_mask = clip_max(context_attention_mask, max_len = 1024)
 
     # Compute the loss for each choice
+    print(context_input_ids)
     losses = model(
         context_input_ids = context_input_ids.to(model.device),
         context_attention_mask = context_attention_mask.to(model.device),
