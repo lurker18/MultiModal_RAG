@@ -10,6 +10,7 @@ list_elem = ['NNG', 'NNP', 'VV', 'VA'] # 가장 많이 쓰는 품사 - 명사, �
 
 json_dir = "./Fire/"
 filelist = [file for file in os.listdir(json_dir) if file[-6:] == ".jsonl"] # jsonl 파일 모음
+filelist = sorted(filelist)
 
 result_by_date = {} # 날짜별 top10 키워드
 top_10_keywords_title_count = {} # top10에 들어간 키워드 숫자 (title 기준)
@@ -67,7 +68,7 @@ for file in filelist:
         result_by_date[date_info]["title"] = {item[0]: item[1] for item in keywords_in_title_pairs[:10]}
         result_by_date[date_info]["content"] = {item[0]:item[1] for item in keywords_num_in_contents_pairs[:10]}
 
-"""    
+
 # 마지막으로 분석
 total_keywords_in_title_pairs = [tuple(item) for item in total_keywords_in_title.items()]
 total_keywords_num_in_contents_pairs = [tuple(item) for item in total_keywords_num_in_contents.items()]
@@ -75,6 +76,9 @@ total_keywords_num_in_contents_pairs = [tuple(item) for item in total_keywords_n
 # 3년간 전체 키워드 분석 top 100
 total_keywords_in_title_pairs = sorted(total_keywords_in_title_pairs, key=lambda x: x[1], reverse=True)[:100]
 total_keywords_num_in_contents_pairs = sorted(total_keywords_num_in_contents_pairs, key=lambda x: x[1], reverse=True)[:100]
+
+total_keywords_in_title_pairs = {item[0]:item[1] for item in total_keywords_in_title_pairs}
+total_keywords_num_in_contents_pairs = {item[0]: item[1] for item in total_keywords_num_in_contents_pairs}
 
 # top10 빈도분석
 for work_date, work_date_dict in result_by_date.items():
@@ -90,14 +94,23 @@ for work_date, work_date_dict in result_by_date.items():
             top_10_keywords_count[word] += 1
         else:
             top_10_keywords_count[word] = 1
-"""
+
+# top10 빈도분석 키워드 정렬용
+top_10_keywords_title_count_pairs = [tuple(item) for item in top_10_keywords_title_count.items()]
+top_10_keywords_count_pairs = [tuple(item) for item in top_10_keywords_count.items()]
+
+top_10_keywords_title_count_pairs = sorted(top_10_keywords_title_count_pairs, key=lambda x: x[1], reverse=True)
+top_10_keywords_count_pairs = sorted(top_10_keywords_count_pairs, key=lambda x: x[1], reverse=True)
+
+top_10_keywords_title_count = {item[0]:item[1] for item in top_10_keywords_title_count_pairs}
+top_10_keywords_count = {item[0]:item[1] for item in top_10_keywords_count_pairs}
+
 # json 변환 시도
 
 # 날짜별 키워드 분석
 with open("Fire-keywords-by-date.json", "w", encoding='utf8') as A:
     json.dump(result_by_date, A, indent=2, ensure_ascii=False)
 
-"""
 # 3년간 제목 top 100
 with open("Fires-top-100-keywords-in-title.json", "w", encoding="utf8") as B:
     json.dump(total_keywords_in_title_pairs, B, indent=2, ensure_ascii=False)
@@ -113,4 +126,3 @@ with open("Fires-keywords-count-in-top10-title.json", "w", encoding="utf8") as C
 # top 10 횟수 분석
 with open("Fires-keywords-count-in-top10-content.json", "w", encoding="utf8") as C:
     json.dump(top_10_keywords_count, C, indent=2, ensure_ascii=False)
-"""
