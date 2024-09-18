@@ -58,6 +58,11 @@ def main(in_file, config = "closed_gpt3", out_dir = "../baseline_results/", gcs_
         retrieved_data = fall_back(gcs, dpr)
 
         answers = run_rag(questions, retrieved_data = retrieved_data, generate = generate)
+    
+    elif config == 'closed_vaivgem':
+
+        from generation.vaivgem import run_vaivgem
+        answers, scores = run_vaivgem(questions, generate = generate, rm_date_q = rm_date_q)
         
     else:
         assert False
@@ -76,7 +81,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--in-file', type = str, metavar = 'N', default = 'dummy_data/20220201_qa.jsonl', help = 'input jsonl file')
     parser.add_argument('--config', type = str, metavar = 'N', 
-                        choices = ["closed_gpt3", "closed_t5", "open_gpt3_dpr", "open_gpt3_gcs", "open_rag_dpr", "open_rag_gcs"], default = 'closed_gpt3', help = 'baseline configuration')
+                        choices = ["closed_gpt3", "closed_t5", "open_gpt3_dpr", "open_gpt3_gcs", "open_rag_dpr", "open_rag_gcs", "closed_vaivgem"], default = 'closed_gpt3', help = 'baseline configuration')
     parser.add_argument('--out-dir', type = str, metavar = 'N',
                         default = '../baseline_results/', help = 'baseline results output')
     parser.add_argument('--generate', default = False, action = 'store_true',

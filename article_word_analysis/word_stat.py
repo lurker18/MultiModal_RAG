@@ -6,7 +6,8 @@ m = Mecab()
 
 total_keywords_in_title = {}
 total_keywords_num_in_contents = {}
-list_elem = ['NNG', 'NNP', 'VV', 'VA'] # 가장 많이 쓰는 품사 - 명사, 동사, 형용사
+# list_elem = ['NNG', 'NNP', 'VV', 'VA'] # 가장 많이 쓰는 품사 - 명사, 동사, 형용사
+list_elem = ["NNG", "NNP"] # 일반명사, 고유명사만 남기기
 
 json_dir = "./Fire/"
 filelist = [file for file in os.listdir(json_dir) if file[-6:] == ".jsonl"] # jsonl 파일 모음
