@@ -12,6 +12,7 @@ This will yield `dummy_data/2020201_gcs.jsonl`. Replace the `--in-file` argument
 ## Answer Prediction (Reading Comprehension)
 ```bash
 python baseline_main.py --in-file ../past/2022/20220617_qa.jsonl --config open_rag_gcs --gcs-file ../past/2022/20220617_gcs.jsonl
+python baseline_main.py --in-file ./dummy_data/20220613_qa.jsonl --config open_rag_gcs --gcs-file ./dummy_data/20220613_gcs.jsonl --generate
 ```
 The six `config` choices are: `[closed_gpt3, closed_t5, open_gpt3_gcs, open_gpt3_dpr, open_rag_gcs, open_rag_dpr]`. See [our paper](https://arxiv.org/abs/2207.13332) for more details. Use `--generate` for generation.
 * in-file : qa dataset for answer sheet
@@ -22,6 +23,7 @@ The six `config` choices are: `[closed_gpt3, closed_t5, open_gpt3_gcs, open_gpt3
 ## Evaluation
 ```bash
 python evaluate_main.py --pred-file ../baseline_results/2022/20220617_qa_open_gpt3_gcs.jsonl --gold-file ../past/2022/20220617_qa.jsonl 
+python evaluate_main.py --pred-file ../baseline_results/20220613_qa_open_gpt3_gcs.jsonl --gold-file ./dummy_data/20220613_qa.jsonl 
 ```
 * pred-file : answer prediction result
 * gold-file : original qa set for comarison
@@ -43,3 +45,5 @@ os.environ['HF_DATASET_CACHE'] = '/home/utopiamath/Downloads' # cache path
 ```
 * set transformer cache, huggingface home and huggingface dataset cache (should be accessible)
 
+## Warning ##
+If you want to use `open_gpt3_gcs` option, you shoud make `question_id` keys of `()_gcs.jsonl` and `()_dpr.jsonl` files equal.

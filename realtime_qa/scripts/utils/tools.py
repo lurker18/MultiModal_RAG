@@ -1,5 +1,7 @@
-import json, jsonlines, datetime, string
+import json, jsonlines, datetime, string, re
 from collections import Counter
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
         
 def read_jsonl(in_file):
     questions = []
@@ -96,3 +98,65 @@ def metric_max_over_ground_truths(metric, prediction, ground_truths):
         score = metric(prediction, ground_truth)
         scores_for_ground_truths.append(score)
     return max(scores_for_ground_truths)
+
+# 답변 판단 기준 함수
+def get_answers_from_choices(response, choices, default=3):
+    """
+        응답 response
+        답변 choices 
+    """
+    
+    zero_resp = ["0", "zero", "first"]
+    one_resp = ["1", "one", "second"]
+    two_resp = ["2", "two", "thrid"]
+    three_resp = ["3", "three", "fourth"]
+
+    resp_zip = [zero_resp, one_resp, two_resp, three_resp]
+
+    result = str(default) # 기본
+    response = clean_text(response)
+    choices = [clean_text(choice) for choice in choices]
+
+    for idx, choice in enumerate(choices):
+        set_result = False
+        # resp_text 안에 있으면 강제 탈출
+        for txt in resp_zip[idx]:
+            if txt in response:
+                set_result = True
+                result = str(idx)
+                break
+        if set_result: break
+    if not set_result:
+        cos_sim_series, result = cos_vector(response, choices)
+    
+    # 0.5 초과할 때에만 
+    if set_result or max(cos_sim_series) > 0.5:
+        return str(result)
+    else:
+        return str(default)
+
+        
+    
+# 문자열을 소문자로 변환 후 정규 표현식을 사용하여 알파벳과 숫자를 제외한 모든 문자 제거
+def clean_text(text):
+    
+    text = re.sub(r'[^a-z0-9\s]', '', text.lower())
+    return text
+
+# 키워드의 코사인 유사도 측정.
+def cos_vector(keyword:str, choices:list):
+    # TF-IDF 벡터라이저 초기화
+    vectorizer = TfidfVectorizer()
+    
+    size = len(choices)
+    choices.append(keyword)
+    tfidf_matrix = vectorizer.fit_transform(choices) # 단어 추가
+
+    # 코사인 유사도 계산
+    cos_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
+    cos_sim_series = [cos_sim[j, size] for j in range(size)]
+
+    # 최대 인덱스 기준으로 찾기
+    result = cos_sim_series.index(max(cos_sim_series))
+
+    return cos_sim_series, result

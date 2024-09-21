@@ -1,19 +1,17 @@
+
 import torch
 from transformers import RagSequenceForGeneration, RagTokenizer
 from utils.tools import add_today
 
-# os.environ["TRANSFORMERS_CACHE"] = '/home/utopiamath/.cache/huggingface/hub' # 경로 변경
-model_folder = '/media/lurker18/HardDrive/HuggingFace/models/' # 일반 로컬 경로 설정
+model_folder = '/home/yohan/.cache/huggingface/hub/' # 일반 로컬 경로 설정
 #model_folder = '/mnt/nvme01/huggingface/models/'               # ANDLab연구실 서버 경로 설정
 
 # 모델 로드
-model_name = model_folder + "Facebook/rag-sequence-nq"
-# print("TF", os.environ["TRANSFORMERS_CACHE"])
-# model = RagSequenceForGeneration.from_pretrained(model_name, cache_dir='/home/utopiamath/.cache/')
-# config = RagConfig.from_pretrained(model_name, cache_dir='/home/utopiamath/.cache/')
-# tokenizer = RagTokenizer.from_pretrained(model_name, cache_dir='/home/utopiamath/.cache/')
+# model_name = model_folder + "Facebook/rag-sequence-nq"
+model_name = "facebook/rag-sequence-nq"
 
 def run_rag(questions, retrieved_data, generate = False, top_k = 5, model = 'facebook/rag-sequence-nq', as_of = False):
+
     model, tokenizer = load_model(model)
     answers = []
     for q_idx in range(len(questions)):
@@ -26,7 +24,9 @@ def run_rag(questions, retrieved_data, generate = False, top_k = 5, model = 'fac
             answers.append(answer)
     return answers
 
+
 def rag_question(question, retrieved_docs, model, tokenizer, top_k = 5, as_of = False):
+
     sentence = question["question_sentence"]
     
     # lowercase by default
@@ -43,6 +43,7 @@ def rag_question(question, retrieved_docs, model, tokenizer, top_k = 5, as_of = 
         targets.append('</s> ' + choice.lower())
     
     # Tokenize the inputs
+
     inputs = tokenizer(inputs, padding = True, return_tensors = "pt")
     input_ids = inputs["input_ids"].to(model.device)
 
@@ -56,6 +57,7 @@ def rag_question(question, retrieved_docs, model, tokenizer, top_k = 5, as_of = 
     
     labels = targets["input_ids"].to(model.device)
     # -1 to remove bos
+
     out_sizes = targets["attention_mask"].to(model.device).eq(1).sum(dim = -1) - 1
 
     # Retrieve documents and convert to input ids
@@ -128,7 +130,9 @@ def rag_question_gen(question, retrieved_docs, model, tokenizer, top_k = 5, as_o
     if as_of:
         sentence = add_today(sentence, question["question_date"])
     sentence = sentence.lower()
+
     inputs = tokenizer(sentence, padding = True, return_tensors = "pt")
+
     input_ids = inputs["input_ids"].to(model.device)
 
     retrieved_text, doc_scores = get_retrieval_text(retrieved_docs, sentence, top_k=top_k)
@@ -137,6 +141,7 @@ def rag_question_gen(question, retrieved_docs, model, tokenizer, top_k = 5, as_o
     context_attention_mask = clip_max(context_attention_mask, max_len = 1024)
 
     generated = model.generate(
+
                     context_input_ids = context_input_ids.to(model.device),
                     context_attention_mask = context_attention_mask.to(model.device),
                     doc_scores = doc_scores.to(model.device),
@@ -146,6 +151,7 @@ def rag_question_gen(question, retrieved_docs, model, tokenizer, top_k = 5, as_o
 
     
 def load_model(model_name):
+
     model = RagSequenceForGeneration.from_pretrained(model_name)
     tokenizer = RagTokenizer.from_pretrained(model_name)
     if torch.cuda.is_available():

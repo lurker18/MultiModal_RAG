@@ -61,11 +61,14 @@ def parse_article(url):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(allow_abbrev=False)
+    import os
+    gcs_key = os.getenv('GCS_KEY')
+    engine_key = os.getenv('ENGINE_KEY')
 
     parser.add_argument('--key', type=str, metavar='N', 
-                        default='AIzaSyBGhEhUpvDfPhvyGhecOXn4AwndCUTy9EQ', help='API Key')
+                        default=gcs_key, help='API Key')
     parser.add_argument('--engine', type=str, metavar='N', 
-                        default='48657aaa55719c8c2', help='Search Engine ID')
+                        default=engine_key, help='Search Engine ID')
     parser.add_argument('--in-file', type=str, metavar='N',
                         default='test/test.jsonl', help='input jsonl file')
     parser.add_argument('--out-file', type=str, metavar='N',

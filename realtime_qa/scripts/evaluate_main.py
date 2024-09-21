@@ -2,10 +2,10 @@ import argparse, os
 import itertools
 from utils.tools import read_jsonl, answer2jsonl, check_jsonls, metric_max_over_ground_truths,  f1_score, exact_match_score
 
-os.environ["TRANSFORMERS_CACHE"] = '/home/utopiamath/.cache'
+os.environ["TRANSFORMERS_CACHE"] = '/home/yohan/.cache'
 # 다운로드 경로 변경
-os.environ['HF_HOME'] = '/home/utopiamath/.cache/huggingface'
-os.environ['HF_DATASET_CACHE'] = '/home/utopiamath/Downloads'
+os.environ['HF_HOME'] = '/home/yohan/.cache/huggingface'
+os.environ['HF_DATASET_CACHE'] = '/home/yohan/Downloads'
 
 def main(pred_file, gold_file, generate=False, cnn_only=False):
     preds = read_jsonl(pred_file)

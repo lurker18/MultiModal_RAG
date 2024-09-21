@@ -1,3 +1,5 @@
+
+import utils.hf_env
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 import numpy as np
 import torch
@@ -7,10 +9,10 @@ from utils.tools import add_today
 #model_folder = '/mnt/nvme01/huggingface/models/'               # ANDLab연구실 서버 경로 설정
 
 def run_closed_t5(questions, generate = False, as_of = False):
-    model_folder = '/media/lurker18/HardDrive/HuggingFace/models/' # 일반 로컬 경로 설정
+    model_folder = '/home/yohan/.cache/huggingface/hub/' # 일반 로컬 경로 설정
     #model_folder = '/mnt/nvme01/huggingface/models/'               # ANDLab연구실 서버 경로 설정
     #model, tokenizer = load_model('google/t5-xxl-ssm-nq')
-    model, tokenizer = load_model(model_folder + 'Google/T5/t5-v1_1-base')
+    model, tokenizer = load_model(model_folder + 'models--facebook--rag-sequence-nq/snapshots/c0d9c6ceda8a69c78091abb7aa734a97b75b89fd')
     answers = []
     for question in questions:
         with torch.no_grad():
@@ -20,6 +22,7 @@ def run_closed_t5(questions, generate = False, as_of = False):
                 answer = t5_question(question, model, tokenizer, as_of)
             answers.append(answer)
     return answers
+
 
 def t5_question(question, model, tokenizer, as_of = False):
     sentence = question["question_sentence"]
@@ -31,6 +34,7 @@ def t5_question(question, model, tokenizer, as_of = False):
     # I wanted to do batching, but I don't think HF's padding is working. They include paddings for loss, which is a bug!!!
     # https://github.com/huggingface/transformers/blob/v4.19.4/src/transformers/models/t5/modeling_t5.py#L1672
     for choice in choices:
+
         inputs = tokenizer(sentence, padding = True, return_tensors = "pt")
         input_ids = inputs["input_ids"].to(model.device)
         with tokenizer.as_target_tokenizer():
@@ -42,14 +46,17 @@ def t5_question(question, model, tokenizer, as_of = False):
     return [str(answer)]
 
 def t5_question_gen(question, model, tokenizer, as_of = False):
+
     sentence = question["question_sentence"]
     # lowercase by default
     if as_of:
         sentence = add_today(sentence, question["question_date"])
+
     inputs = tokenizer(sentence, padding = True, return_tensors = "pt")
     input_ids = inputs["input_ids"].to(model.device)
     answer = model.generate(input_ids = input_ids)[0]
     answer = tokenizer.decode(answer, skip_special_tokens = True).strip()
+    
     return answer
 
 def load_model(model_name):
