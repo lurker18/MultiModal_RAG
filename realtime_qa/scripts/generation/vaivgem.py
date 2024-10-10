@@ -11,13 +11,12 @@ import tiktoken
 from transformers import pipeline, AutoModel, AutoTokenizer, AutoModelForCausalLM
 from transformers.generation.utils import GenerationConfig
 import torch
+import re
 
 load_dotenv()
-api_key = os.getenv('OPENAI_API_KEY')
-client = OpenAI(api_key = api_key)
 
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "4"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "4"
 
 MODEL_PATH = '/mnt/nvme01/huggingface/models/Vaiv' # Server
 MODEL_NAMES = [
@@ -28,18 +27,18 @@ MODEL_NAMES = [
     'llamion-14b-chat'
 ]
 
-# selected_model = MODEL_PATH + '/' + MODEL_NAMES[0] # Gem2-Llamion-14b-chat 사용법
-selected_model = 'vaiv/GeM2-Llamion-14B-Base'
+selected_model = MODEL_PATH + '/' + MODEL_NAMES[0] # Gem2-Llamion-14b-chat 사용법
+# selected_model = 'vaiv/GeM2-Llamion-14B-Base'
 
 # 모델을 GPU로 이동
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:4" if torch.cuda.is_available() else "cpu")
 
 def run_vaivgem(questions, retrieved_data = None, generate = False, model = selected_model, rm_date_q = False, rm_date_r = False):
     answers = []
     scores = []
     tokenizer = AutoTokenizer.from_pretrained(selected_model, use_fast=False, trust_remote_code=True)
     model = AutoModelForCausalLM.from_pretrained(selected_model, device_map="auto", torch_dtype=torch.bfloat16, trust_remote_code=True)
-    model.generation_config = GenerationConfig.from_pretrained(selected_model)
+    # model.generation_config = GenerationConfig.from_pretrained(selected_model)
     
     for q_idx in range(len(questions)):
         question = questions[q_idx]
@@ -62,12 +61,11 @@ def vaivgem_question(question, retrieved_text = None, model = selected_model, rm
     if not rm_date_q:
         sentence = add_today(sentence, question["question_date"])
 
-    query =  f"""The assistant receives a question and four choices with some evidence. Please answer the number (0, 1, 2 or 3) of given choices that matches the question: 
-    for example, given the choices ["A", "C", "Z", "None of the above"] and the question is given as "What is the last alphabet?", the assistant should answer '2', indicating the index of the answer 'Z'.
-    Given question : {question["question_sentence"]}
-    Given choices : {question["choices"]}
-    Hint for Anser : {question["evidence"]}
-    Answer :"""
+    query =  f"""주어진 힌트를 참고한 뒤에 질문을 보고 선택지 중에  답변을 하세요. 선택지는 4개가 있으며, 첫 번째값이 정답이면 0, 두 번째 값이 정답이면1, 세 번째 값이 정답이면 2, 네 번째 값이 정답이면 3을 답하시면 됩니다. 힌트는 질문에 대해 답변을 할 때 참고할 수 있는 내용입니다.   
+    질문 : {question["question_sentence"]}
+    선택지 : {question["choices"]}
+    힌트 : {question["evidence"]}
+    답변 :"""
 
     token_inputs = tokenizer(query, return_tensors="pt").to(device)
     inputs_dic = {key:value for key, value in token_inputs.items() if key != 'token_type_ids'}
@@ -82,7 +80,12 @@ def vaivgem_question(question, retrieved_text = None, model = selected_model, rm
     answer = tokenizer.decode(output, skip_special_tokens=True)
     # 답변에서 생성하기
     if "list" in str(type(question["choices"])):
-        if answer[0] in [str(j) for j in range(0, 10)]:
+        # print(f"예시: {answer}")
+        if re.search(r"답변\s?:\s?(\d)", answer):
+            num = re.search(r"답변\s?:\s?(\d)", answer).group(1)
+            answer = str(num)
+            print(num)
+        elif answer[0] in [str(j) for j in range(0, 10)]:
             answer = answer[0]
         elif answer[-1] in [str(j) for j in range(0, 10)]:
             answer = answer[-1]
@@ -132,6 +135,11 @@ def vaivgem_question_gen(question, retrieved_text = None, model = selected_model
     # answer = output["choices"][0]["text"].strip()
     answer = tokenizer.decode(output, skip_special_tokens=True)
     if "list" in str(type(question["choices"])):
+        # print(f"예시: {answer}")
+        if re.search(r"답변\s?:\s?(\d)", answer):
+            num = re.search(r"답변\s?:\s?(\d)", answer).group(1)
+            answer = str(num)
+            print(num)
         if answer[0] in [str(j) for j in range(0, 10)]:
             answer = answer[0]
         elif answer[-1] in [str(j) for j in range(0, 10)]:
